@@ -1,5 +1,4 @@
 # Radio-hub
-#### Video Demo:  <URL HERE>
 #### Description: this is a simple app that that allows the user to play radio stations
  via the functions exposed by the radio-browser api on their desktop and has been made to be visually compact to not occupy large portions of the user's window as it is meant to play in the background. it is made using some tailwind css,electron js and react js along with the radio-browser for node js library on github at this link:(https://github.com/nepodev/radio-browser) which uses the radio-browser api and directly fetches results from the radio-browser api for the search page. the submitted app is a simplified version of the original app as some additional pages and features were built around using the electron-store library but towards the end of development electron-store was not functioning properly with the development enviroment and so after debugging has been excluded. to start the app use npm start in the terminal after opening the radio-hub folder and it can be packaged using electron packager/builder.
 
