@@ -1,0 +1,72 @@
+:root{
+    --primary-color: #000814;
+    --secondary-color: #001d3d;
+    --accent-color: #003566;
+    --background-color: #ffc300;
+    --text-color: #ffd60a;
+}
+body{
+    margin:0;
+    padding:0;
+    background-color:var(--primary-color);
+}
+.search-page{
+    background-color:var(--primary-color);
+    height:90vh;
+    color:var(--text-color);
+    overflow-y:scroll;
+    scrollbar-width:none;
+}
+
+.search-page form{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    margin-top:20px;
+    margin-left:20px
+}
+
+.search-page form select{
+    width:200px;
+    height:30px;
+    margin-bottom:10px;
+    background-color:var(--secondary-color);
+    color:var(--text-color);
+    border:none;
+    border-radius:5px;
+    display:flex;
+    flex-direction:column;
+}
+
+.search-page form input{
+    width:200px;
+    height:30px;
+    margin-bottom:10px;
+    background-color:var(--secondary-color);
+    color:var(--text-color);
+    border:none;
+    border-radius:5px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+
+.search-page form button{
+    width:200px;
+    height:30px;
+    background-color:var(--accent-color);
+    color:var(--text-color);
+    border:none;
+    border-radius:5px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.search-page form button:hover{
+    background-color:var(--background-color);
+    color:var(--primary-color);
+    cursor:pointer;
+}
