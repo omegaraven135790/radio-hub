@@ -39,6 +39,7 @@ import { RadioProvider } from './context/radio-context.jsx';
 import Top from './pages/topStation.jsx';
 import Search from './pages/searchPage.jsx';
 import React from 'react';
+import Favorite from './pages/favorite.jsx';
 
 const App = () => {
    const audioRef = useRef(null);
@@ -51,7 +52,7 @@ const App = () => {
       <NavBar />
       <Routes>
           <Route path="/" element={<Home />} />
-           <Route path="/top" element={<Top />} />
+           <Route path="/favorite" element={<Favorite />} />
           <Route path="/recent" element={<Recent />} />
           <Route path="/search" element={<Search />} />
       </Routes>

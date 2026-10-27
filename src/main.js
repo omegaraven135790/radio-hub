@@ -3,6 +3,36 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { ipcMain } from 'electron';
 import RadioBrowser from 'radio-browser';
+import { DatabaseSync } from 'node:sqlite';
+
+
+const userDataPath = app.getPath('userData');
+const dbPath = path.join(userDataPath, 'radiohub.db');
+const db = new DatabaseSync(dbPath);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS favorites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stationuuid TEXT UNIQUE NOT NULL,
+    votes INTEGER DEFAULT 0,
+    country TEXT,
+    tags TEXT,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL
+  );
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS recent (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stationuuid TEXT UNIQUE NOT NULL,
+    votes INTEGER DEFAULT 0,
+    country TEXT,
+    tags TEXT,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL
+  );
+`);
 
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -74,12 +104,69 @@ ipcMain.handle('search-stations', async (event, filters) => {
     }
 });
 
+ipcMain.handle('get-favorites', (event) => {
+    try {
+        const stmt = db.prepare('SELECT * FROM favorites');
+        const favorites = stmt.all();
+        console.log('Retrieved favorites from database:', JSON.stringify(favorites));
+        return { success: true, data: favorites };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+
+  });
+
+ipcMain.handle('add-favorite', (event, stations) => {
+  const station = stations[0];
+  // console.log('Adding favorite in main process:', station);
+  // console.log(typeof station, JSON.stringify(station));
+    try {
+        const stmt = db.prepare('INSERT INTO favorites (stationuuid, name, url, votes, country, tags) VALUES (?, ?, ?,?,?,?)');
+        stmt.run(station.stationuuid, station.name, station.url, station.votes, station.country, station.tags);
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle('remove-favorite', (event, stationuuid) => {
+    // console.log('remove-favorite got:', typeof stationuuid, JSON.stringify(stationuuid));
+    try {
+        const stmt = db.prepare('DELETE FROM favorites WHERE stationuuid = ?');
+        stmt.run(stationuuid);
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle('get-recents', (event) => {
+    try {
+        const stmt = db.prepare('SELECT * FROM recent ORDER BY id DESC LIMIT 50');
+        const recent = stmt.all();
+        const remove = db.prepare('DELETE FROM recent WHERE id NOT IN (SELECT id FROM recent ORDER BY id DESC LIMIT 50)');
+        remove.run();
+        return { success: true, data: recent };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle('add-recent', (event, station) => {
+    try {
+        // console.log('Adding recent in main process:', station);
+        const stmt = db.prepare('INSERT INTO recent (stationuuid, name, url, votes, country, tags) VALUES (?, ?, ?,?,?,?)');
+        stmt.run(station.stationuuid, station.name, station.url, station.votes, station.country, station.tags);
+        return { success: true };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+
+});
 
 app.whenReady().then(() => {
   createWindow();
 
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -90,6 +177,23 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
+let Cleanup = false;
+app.on('before-quit', (event) => {
+  if(!Cleanup) {
+    event.preventDefault();
+    try {
+      const remove = db.prepare('DELETE FROM recent WHERE id NOT IN (SELECT id FROM recent ORDER BY id DESC LIMIT 50)');
+      remove.run();
+      db.close();
+      Cleanup = true;
+      app.quit();
+    }
+    catch (err) {
+      console.error('Error closing database:', err);
+    }
+  
+  }
+});
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();

@@ -9,13 +9,12 @@ import { useRadio } from '../context/radio-context.jsx'
 library.add(fas, far, fab)
 
 function Home(){
-const {pausePlayStation,skip,isPlaying,setVolumeLevel,radioStations,newStationButton,vote,voting} = useRadio();
+const {pausePlayStation,skip,isPlaying,setVolumeLevel,radioStations,newStationButton,vote,voting,curfavorite,addFavorites,removeFavorites} = useRadio();
 
     return <div className = "home">
             <div className = "top">
             </div>
             <div className = "home-content flex justfiy-between gap-6">
-                {/* <FontAwesomeIcon icon="plus" className="save-button" size = "2x" /> */}
 
                 <div className = "player">
                     <div className="disc-container">
@@ -32,12 +31,14 @@ const {pausePlayStation,skip,isPlaying,setVolumeLevel,radioStations,newStationBu
 
                 {/* <FontAwesomeIcon icon="fa-regular fa-heart" className="like-button" size = "2x" /> */}
 
+
             </div>
             <div className = "Buttons">
                 {/* <button className = "btn btn-primary"><FontAwesomeIcon icon="fa-regular fa-circle-play" /> </button> */}
-                <button className = "btn btn-secondary heart" onClick = {voting}>{ <FontAwesomeIcon icon={vote ? "fa-solid fa-heart" : "fa-regular fa-heart"} className="like-button" size = "1x" /> }</button>
+                <button><FontAwesomeIcon icon = {!curfavorite ? "fa-solid fa-plus" : "fa-regular fa-flag"} className="save-button" size = "2x" onClick={curfavorite ? () => removeFavorites(radioStations[0]) : () => addFavorites(radioStations[0])} /></button>
                 <button className = "btn btn-secondary" id = "pause-play" onClick = {pausePlayStation}><FontAwesomeIcon icon = {isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play"} /></button>
                 <button className = "btn btn-secondary" onClick = {skip}><FontAwesomeIcon icon="fa-solid fa-forward-step" /></button>
+                <button className = "btn btn-secondary heart" onClick = {voting}>{ <FontAwesomeIcon icon={vote ? "fa-solid fa-heart" : "fa-regular fa-heart"} className="like-button" size = "1x" /> }</button>
             </div>
             <div className = "lower">
                 <input type= "range" min="0" max="100" defaultValue="50" className = "volume-slider" onChange={(e) => setVolumeLevel(e.target.value)}></input>

@@ -17,6 +17,7 @@ export const RadioProvider = ({children,audioRef}) => {
     const [volume, setVolume] = useState(50);
     const [vote, setVote] = useState(false);
     const [topStations, setTopStations] = useState([])
+    const [curfavorite, setCurFavorite] = useState(false)
 
 
     // useEffect(() => {
@@ -39,7 +40,27 @@ export const RadioProvider = ({children,audioRef}) => {
     // }, [radioStations])
     useEffect(() => {
         getTopStation();
+        setRadioStations([]);
     },[]);
+    useEffect(() => {
+        async function loadFavorites() {
+            const result = await window.electronAPI.getFavorites();
+            if(result.success) {
+                setFavorites(result.data);
+            }
+        }
+        loadFavorites();
+    }, []);
+
+    useEffect(() => {
+        async function loadRecents() {
+            const result = await window.electronAPI.getRecents();
+            if(result.success) {
+                setRecent(result.data);
+            }
+        }
+        loadRecents();
+    }, []);
 
 
     function setVolumeLevel(value) {
@@ -72,6 +93,7 @@ export const RadioProvider = ({children,audioRef}) => {
         }
         playStation(data[0])
         setVote(false)
+        setCurFavorite(false)
         
     }
 
@@ -111,9 +133,11 @@ export const RadioProvider = ({children,audioRef}) => {
     }
     audioRef.current.src = url;
     audioRef.current.load();
+    setIsPlaying(true);
     audioRef.current.play();
     addRecent(station);
     console.log("recent stations:", recent);
+    setCurFavorite(false)
     }
 
     async function searchStation(filters) {
@@ -150,27 +174,31 @@ export const RadioProvider = ({children,audioRef}) => {
 
 
     async function   addRecent(radioStation){
-                let updated = [...recent, radioStation]
+                let updated = [radioStation,...recent]
                 setRecent(updated)
+                await window.electronAPI.addRecent(radioStation)
             }            
         
-    async function addFavorites(radioStations) {
-        // if(radioStations) {
-        //     let updated = [...favorites, radioStations]
-        //     setFavorites(updated)
-        //     await window.electronStore.set('favorites', updated)
-        //     // electron-store.set('favorites', updated)
-        // }
+    async function addFavorites(radioStation) {
+        if(radioStation) {
+            console.log('Adding favorite:', radioStation);
+            let updated = [...favorites, radioStation]
+            setFavorites(updated)
+            let res = await window.electronAPI.addFavorite(radioStations)
+            console.log('addFavorite result:', res);
+            setCurFavorite(true)
+
+        }
 
         }
     async function removeFavorites(station) {
-        // if(station) {
-        //     let updated = favorites.filter(s => s.stationuuid !== station.stationuuid)
-        //     setFavorites(updated)
-        //     await window.electronStore.set('favorites', updated)
-        //     // electron-store.set('favorites', updated)
-            
-        // }
+        if(station) {
+            let updated = favorites.filter(s => s.stationuuid !== station.stationuuid)
+            setFavorites(updated)
+            await window.electronAPI.removeFavorite(station.stationuuid)            
+            setCurFavorite(false)
+
+        }
     }
 
     async function newStationButton(){
@@ -178,6 +206,7 @@ export const RadioProvider = ({children,audioRef}) => {
         playStation(radioStations[0])
         setVote(false)
         setIsPlaying(true)
+        setCurFavorite(false)
     }
 
     async function getTopStation(){
@@ -192,6 +221,7 @@ export const RadioProvider = ({children,audioRef}) => {
         volume,
         vote,
         topStations,
+        curfavorite,
         pausePlayStation,
         skip,
         addFavorites,
